@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.effect.InnerShadow?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<StackPane stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1">
+    <GridPane id="backgroundPane" maxHeight="170" maxWidth="250" prefHeight="170" prefWidth="250" vgap="-2" hgap="-2">
+      <opaqueInsets>
+         <Insets />
+      </opaqueInsets></GridPane>
+    <VBox alignment="CENTER" spacing="5">
+        <Text id="packName" fill="black" text="&lt;pack_name&gt;">
+            <font>
+                <Font name="Arial" size="21.0" />
+            </font>
+        </Text>
+        <Text id="packVersion" fill="black" text="&lt;pack_version&gt;">
+            <font>
+                <Font name="Arial" size="16.0" />
+            </font>
+        </Text>
+    </VBox>
+    <HBox alignment="BOTTOM_CENTER" spacing="159">
+        <effect>
+            <InnerShadow color="black" offsetY="-2" radius="5" />
+        </effect>
+
+        <Button alignment="BOTTOM_RIGHT" text="Edit" textAlignment="CENTER" textFill="black">
+            <padding>
+                <Insets bottom="6" left="12" right="12" top="6" />
+            </padding>
+            <effect>
+                <DropShadow color="black" offsetX="-1" offsetY="-1" radius="5">
+                    <input>
+                        <InnerShadow color="#444444" offsetY="1" radius="1" />
+                    </input>
+                </DropShadow>
+            </effect>
+         <styleClass>
+            <String fx:value="corner-button" />
+            <String fx:value="edit" />
+         </styleClass>
+
+        </Button>
+      <Button alignment="BOTTOM_RIGHT" layoutX="123.0" layoutY="151.0" text="Paste" textAlignment="CENTER" textFill="black">
+         <padding>
+            <Insets bottom="6" left="12" right="12" top="6" />
+         </padding>
+         <effect>
+            <DropShadow color="black" offsetX="-1" offsetY="-1" radius="5">
+               <input>
+                  <InnerShadow color="#444444" offsetY="1" radius="1" />
+               </input>
+            </DropShadow>
+         </effect>
+         <styleClass>
+            <String fx:value="corner-button" />
+            <String fx:value="play" />
+         </styleClass>
+      </Button>
+
+
+    </HBox>
+</StackPane>

@@ -1,0 +1,6 @@
+<style data-th-text="#{css}"></style>
+<div class="modpacks">
+    <div data-th-each="modpack : ${modpacks}">
+        <div data-th-replace="modpack.listing :: copy (${modpack})"></div>
+    </div>
+</div>

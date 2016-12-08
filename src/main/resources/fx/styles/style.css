@@ -1,0 +1,16 @@
+.corner-button {
+    -fx-border-width: 0px;
+    -fx-border-style: none;
+    -fx-background-color: #444444;
+    -fx-cursor: hand;
+}
+
+.corner-button.edit {
+    -fx-border-radius: 0 10 0 10;
+    -fx-background-radius: 0 10 0 10;
+}
+
+.corner-button.play {
+    -fx-border-radius: 10 0 10 0;
+    -fx-background-radius: 10 0 10 0;
+}

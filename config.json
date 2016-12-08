@@ -1,0 +1,35 @@
+{
+
+  "mod-path": "/home/vilsol/Games/factorio/mods",
+
+  "mods": {
+    "orzelek/rso-mod": "*",
+    "Bobingabout/boblogistics": "*",
+    "Narc/EvoGUI": "*",
+    "MagmaMcFry/Factorissimo": "*",
+    "Bobingabout/bobconfig": "*",
+    "Bobingabout/bobpower": "*",
+    "Bobingabout/bobplates": "*",
+    "Bobingabout/bobassembly": "*",
+    "Bobingabout/bobores": "*",
+    "Bobingabout/bobmining": "*",
+    "Bobingabout/bobelectronics": "*",
+    "Bobingabout/bobgreenhouse": "*",
+    "Bobingabout/bobtech": "*",
+    "Bobingabout/bobenemies": "*",
+    "Bobingabout/bobmodules": "*",
+    "Bobingabout/boblibrary": "*",
+    "TheSAguy/Bio_Industries": "*",
+    "skomick/tree_collision": "*",
+    "mindmix/AutoDeconstruct": "*",
+    "Schorty/air-filtering": "*",
+    "YuokiTani/Yuoki": "*",
+    "Peppe/Yi_Tech_Tree": "*",
+    "aster26/LateUpgrades": "*"
+  },
+
+  "exclude": [
+    "Blu3wolf/Treefarm-Lite"
+  ]
+
+}
