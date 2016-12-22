@@ -17,8 +17,8 @@
 package me.vilsol.factorioupdater.models;
 
 import lombok.Data;
-import me.vilsol.factorioupdater.ModManager;
 import me.vilsol.factorioupdater.Resource;
+import me.vilsol.factorioupdater.managers.ModManager;
 import me.vilsol.factorioupdater.util.Mappable;
 import me.vilsol.factorioupdater.util.Utils;
 import org.json.JSONObject;
@@ -27,9 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -41,13 +39,16 @@ public class ModPack implements Mappable {
     private final String name;
     private final Version version;
     private final Version factorioVersion;
-    private final Map<String, ModPackMod> mods;
+    private final Map<String, ModWithRelease> mods;
 
     private final File rootDirectory;
     private final File gameDirectory;
     private final File modsDirectory;
+    
+    private Tree<ModWithRelease> dependencies = new Tree<>((Tree<ModWithRelease>) null);
+    private List<Dependency> missing = new ArrayList<>();
 
-    public ModPack(String name, File directory, Version version, Version factorioVersion, Map<String, ModPackMod> mods){
+    public ModPack(String name, File directory, Version version, Version factorioVersion, Map<String, ModWithRelease> mods){
         this.name = name;
         this.version = version;
         this.factorioVersion = factorioVersion;
@@ -87,6 +88,19 @@ public class ModPack implements Mappable {
             }
         }
     }
+    
+    public List<Dependency> resolve(){
+        dependencies = new Tree<>((Tree<ModWithRelease>) null);
+        missing = new ArrayList<>();
+    
+        mods.forEach((name, mod) -> {
+            ModManager.FetchTreeResult result = ModManager.getInstance().fetchTree(name, mod.getModRelease().getVersion(), "=");
+            dependencies.addBranch(result.getResult());
+            missing.addAll(result.getMissing());
+        });
+        
+        return missing;
+    }
 
     public String exportPack(){
         JSONObject data = new JSONObject();
@@ -94,6 +108,7 @@ public class ModPack implements Mappable {
         data.put("version", version.toString());
         data.put("factorio_version", factorioVersion.toString());
         data.put("mods", this.mods.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getAsJson())));
+        data.put("schema", "v1");
 
         byte[] json = data.toString().getBytes();
         byte[] deflate = Utils.deflate(json);
@@ -108,26 +123,42 @@ public class ModPack implements Mappable {
         return fromJSON(new JSONObject(new String(inflated)), installDirectory);
     }
     
-    public static ModPack fromJSON(JSONObject json, File installDirectory){
+    public static ImportedModPack fromJSON(JSONObject json, File installDirectory){
         String schema = json.getString("schema");
     
+        Set<String> invalidMods = new HashSet<>();
+        Map<Mod, Version> invalidVersions = new HashMap<>();
+        Map<String, ModWithRelease> mods = new HashMap<>();
+        
         switch(schema){
             case "v1":
-                Map<String, ModPackMod> mods = new HashMap<>();
                 JSONObject modsData = json.getJSONObject("mods");
-                for (String key : modsData.keySet()) {
-                    JSONObject modData = modsData.getJSONObject(key);
-                    Version version = new Version(modData.getString("version"));
-                    Mod m = ModManager.getInstance().fetchMod(key);
-                    if (m != null) {
-                        ModRelease r = m.matchRelease("=", version);
-                        if (r != null) {
-                            mods.put(key, new ModPackMod(m, r, modData.getBoolean("enabled")));
-                        }
+                for (String name : modsData.keySet()) {
+                    JSONObject modData = modsData.getJSONObject(name);
+                    String versionString = modData.getString("version");
+                    boolean enabled = modData.optBoolean("enabled", true);
+                    
+                    Mod mod = ModManager.getInstance().fetchMod(name);
+                    if (mod == null) {
+                        invalidMods.add(name);
+                        continue;
+                    }
+                    
+                    Version version = new Version(versionString);
+                    ModRelease release = mod.matchRelease("=", version);
+                    
+                    if (release == null) {
+                        invalidVersions.put(mod, version);
+                    } else {
+                        mods.put(mod.getName(), new ModWithRelease(mod, release, enabled));
                     }
                 }
-            
-                return new ModPack(json.getString("name"), installDirectory, new Version(json.getString("version")), new Version(json.getString("factorio_version")), mods);
+    
+                String name = json.getString("name");
+                Version version = new Version(json.getString("version"));
+                Version factorioVersion = new Version(json.getString("factorio_version"));
+                
+                return new ImportedModPack(name, installDirectory, version, factorioVersion, mods, invalidMods, invalidVersions);
         }
         
         return null;
@@ -140,29 +171,29 @@ public class ModPack implements Mappable {
             }
         }
 
-        Set<ModRelease> toDownload = mods.values().stream().flatMap(mod -> {
+        Set<ModWithRelease> toDownload = mods.values().stream().flatMap(mod -> {
             ModRelease release = mod.getModRelease();
             ModManager.FetchTreeResult result = ModManager.getInstance().fetchTree(release.getModName(), release.getVersion(), "=");
             return result.getResult().flattenUnique().stream().map(Tree::getLeaf);
         }).filter(mod -> {
-            File downloadTo = new File(modsDirectory, mod.getFileName());
+            File downloadTo = new File(modsDirectory, mod.getModRelease().getFileName());
             return !downloadTo.exists();
         }).collect(Collectors.toSet());
 
         if(toDownload.size() > 0){
-            double fileSize = toDownload.stream().mapToLong(ModRelease::getFileSize).sum();
+            double fileSize = toDownload.stream().mapToLong(m -> m.getModRelease().getFileSize()).sum();
             System.out.println("Need to download " + toDownload.size() + " mods (" + (new DecimalFormat("#.##").format(fileSize / Resource.FILE_SIZE_TO_MEGABYTES)) + " MB)");
             System.out.println();
         } else {
             System.out.println("All set! No mods need to be downloaded!");
         }
 
-        for(ModRelease mod : toDownload){
-            System.out.println("Downloading " + mod.getModName() + " " + mod.getVersion() + " (" + (new DecimalFormat("#.##").format(mod.getFileSize() / Resource.FILE_SIZE_TO_MEGABYTES)) + " MB)");
+        for(ModWithRelease mod : toDownload){
+            System.out.println("Downloading " + mod.getModRelease().getModName() + " " + mod.getModRelease().getVersion() + " (" + (new DecimalFormat("#.##").format(mod.getModRelease().getFileSize() / Resource.FILE_SIZE_TO_MEGABYTES)) + " MB)");
 
             try {
-                File downloadTo = new File(modsDirectory, mod.getFileName());
-                Utils.download(Resource.URL_FACTORIO_MODS + mod.getDownloadURL(), downloadTo);
+                File downloadTo = new File(modsDirectory, mod.getModRelease().getFileName());
+                Utils.download(Resource.URL_FACTORIO_MODS + mod.getModRelease().getDownloadURL(), downloadTo);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -183,4 +214,5 @@ public class ModPack implements Mappable {
         map.put("modsDirectory", modsDirectory);
         return map;
     }
+    
 }

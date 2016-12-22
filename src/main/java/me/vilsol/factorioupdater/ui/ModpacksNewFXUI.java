@@ -89,6 +89,7 @@ public class ModpacksNewFXUI {
         bb.setHeight(3);
         bb.setIterations(3);
     
+        /*
         ImageView topLeft = new ImageView(FXUtils.getImage("https://mods-data.factorio.com/pub_data/media_files/D2vLWKD4FByu.thumb.png"));
         topLeft.setFitWidth(127);
         topLeft.setFitHeight(87);
@@ -113,6 +114,7 @@ public class ModpacksNewFXUI {
         pane.add(topRight, 1, 0);
         pane.add(bottomLeft, 0, 1);
         pane.add(bottomRight, 1, 1);
+        */
         
         ImageView background = new ImageView(pane.snapshot(new SnapshotParameters(), null));
         background.setFitWidth(250);

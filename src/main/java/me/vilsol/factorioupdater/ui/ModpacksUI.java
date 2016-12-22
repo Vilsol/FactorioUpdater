@@ -27,7 +27,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import me.vilsol.factorioupdater.ModManager;
+import me.vilsol.factorioupdater.managers.ModManager;
 import me.vilsol.factorioupdater.Resource;
 import me.vilsol.factorioupdater.models.*;
 import org.json.JSONObject;
@@ -192,7 +192,7 @@ public class ModpacksUI {
             return null;
         }
         JSONObject modsJson = rootJson.getJSONObject("mods");
-        Map<String, ModPackMod> packMods = new HashMap<>();
+        Map<String, ModWithRelease> packMods = new HashMap<>();
         Set<String> invalidMods = new HashSet<>();
         Map<Mod, Version> invalidVersions = new HashMap<>();
         modsJson.keys().forEachRemaining(mod -> {
@@ -213,7 +213,7 @@ public class ModpacksUI {
             if (r == null) {
                 invalidVersions.put(m, v);
             } else {
-                packMods.put(m.getName(), new ModPackMod(m, r, enabled));
+                packMods.put(m.getName(), new ModWithRelease(m, r, enabled));
             }
         });
 
@@ -288,18 +288,18 @@ public class ModpacksUI {
             missingModsText.setFont(Font.font("Arial", 20));
             missingModsPane.add(missingModsText, 0, 0);
 
-            Map<String, ModPackMod> mods = new HashMap<>(pack.getMods());
-            Map<ModPackMod, ModManager.FetchTreeResult> trees = mods.values().stream().collect(Collectors.toMap(m -> m, m -> ModManager.getInstance().fetchTree(m.getMod().getName(), m.getModRelease().getVersion(), "=")));
+            Map<String, ModWithRelease> mods = new HashMap<>(pack.getMods());
+            Map<ModWithRelease, ModManager.FetchTreeResult> trees = mods.values().stream().collect(Collectors.toMap(m -> m, m -> ModManager.getInstance().fetchTree(m.getMod().getName(), m.getModRelease().getVersion(), "=")));
 
             AtomicInteger foundModsRow = new AtomicInteger(0);
             AtomicInteger missingModsRow = new AtomicInteger(0);
             trees.forEach((m, r) -> {
-                Tree<ModRelease> tree = r.getResult().generateHighestDependencyTree();
-                Stack<Tree<ModRelease>> stack = new Stack<>();
+                Tree<ModWithRelease> tree = r.getResult().generateHighestDependencyTree();
+                Stack<Tree<ModWithRelease>> stack = new Stack<>();
                 stack.push(tree);
                 while (!stack.isEmpty()) {
-                    Tree<ModRelease> t = stack.pop();
-                    ModRelease mr = t.getLeaf();
+                    Tree<ModWithRelease> t = stack.pop();
+                    ModRelease mr = t.getLeaf().getModRelease();
                     if (mr != null) {
                         int depth = t.depth();
                         String indent = repeat("\t", depth);
@@ -309,7 +309,7 @@ public class ModpacksUI {
                         modsPane.add(checkBox, 0, foundModsRow.incrementAndGet());
                         modsPane.add(displayText, 1, foundModsRow.get());
                     }
-                    for (Tree<ModRelease> branch : t.getBranches())
+                    for (Tree<ModWithRelease> branch : t.getBranches())
                         stack.push(branch);
                 }
 

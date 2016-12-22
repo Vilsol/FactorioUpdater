@@ -7,6 +7,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 public class FXUtils {
     
@@ -143,8 +144,17 @@ public class FXUtils {
         image.setY(y);
     }
     
-    public static Image getImage(String url){
-        return new ImageView(imageCache.computeIfAbsent(url, Image::new)).snapshot(null, null);
+    public static CompletableFuture<Image> getImage(String url){
+        CompletableFuture<Image> future = new CompletableFuture<>();
+        
+        Image image = imageCache.computeIfAbsent(url, u -> new Image(u, true));
+        image.progressProperty().addListener((observable, oldValue, newValue) -> {
+            if((Double) newValue == 1.0){
+                future.complete(new ImageView(image).snapshot(null, null));
+            }
+        });
+        
+        return future;
     }
     
 }

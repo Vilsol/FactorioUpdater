@@ -20,6 +20,7 @@ import com.jaunt.NotFound;
 import com.jaunt.ResponseException;
 import com.jaunt.UserAgent;
 import com.jaunt.component.Form;
+import me.vilsol.factorioupdater.managers.ModManager;
 import me.vilsol.factorioupdater.util.Extract;
 import me.vilsol.factorioupdater.util.Utils;
 

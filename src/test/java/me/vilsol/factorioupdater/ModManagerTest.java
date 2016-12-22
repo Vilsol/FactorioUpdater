@@ -16,7 +16,8 @@
  */
 package me.vilsol.factorioupdater;
 
-import me.vilsol.factorioupdater.models.ModRelease;
+import me.vilsol.factorioupdater.managers.ModManager;
+import me.vilsol.factorioupdater.models.ModWithRelease;
 import me.vilsol.factorioupdater.models.Tree;
 import me.vilsol.factorioupdater.models.Version;
 import org.junit.Test;
@@ -35,28 +36,28 @@ public class ModManagerTest {
                 return;
             }
 
-            branch.getLeaf().getDependencies().forEach(dependency -> {
+            branch.getLeaf().getModRelease().getDependencies().forEach(dependency -> {
                 if(dependency.getName().equals("base") || foo_bar.getMissing().contains(dependency)){
                     return;
                 }
 
                 boolean contains = false;
 
-                for(Tree<ModRelease> sub : branch.getBranches()){
-                    if(sub.getLeaf().getModName().equals(dependency.getName())){
+                for(Tree<ModWithRelease> sub : branch.getBranches()){
+                    if(sub.getLeaf().getModRelease().getModName().equals(dependency.getName())){
                         contains = true;
                         break;
                     }
                 }
 
-                assertTrue("Mod " + branch.getLeaf().getModName() + " did not contain " + dependency.getName(), contains);
+                assertTrue("Mod " + branch.getLeaf().getModRelease().getModName() + " did not contain " + dependency.getName(), contains);
             });
         });
 
         assertEquals(4, foo_bar.getMissing().size());
         assertEquals(54, foo_bar.getResult().flattenUnique().size());
 
-        System.out.println(foo_bar.getResult().generateHighestDependencyTree().prettyPrint(r -> r.getModName() + "@" + r.getVersion() + " -> " + r.getDependencies()));
+        System.out.println(foo_bar.getResult().generateHighestDependencyTree().prettyPrint(r -> r.getModRelease().getModName() + "@" + r.getModRelease().getVersion() + " -> " + r.getModRelease().getDependencies()));
     }
 
     @Test

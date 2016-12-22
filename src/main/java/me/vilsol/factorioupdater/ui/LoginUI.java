@@ -24,7 +24,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import me.vilsol.factorioupdater.APIManager;
+import me.vilsol.factorioupdater.managers.APIManager;
 import me.vilsol.factorioupdater.Resource;
 import org.json.JSONObject;
 

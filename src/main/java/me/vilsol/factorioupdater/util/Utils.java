@@ -19,13 +19,14 @@ package me.vilsol.factorioupdater.util;
 import com.google.common.io.ByteStreams;
 import com.jaunt.HttpResponse;
 import com.jaunt.UserAgent;
-import me.vilsol.factorioupdater.ModManager;
+import me.vilsol.factorioupdater.managers.ModManager;
 import me.vilsol.factorioupdater.models.ServerModRequirement;
 import me.vilsol.factorioupdater.models.Version;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.zip.DeflaterOutputStream;
@@ -278,7 +279,6 @@ public class Utils {
         
         byte[] data = receivePacket.getData();
         byte[] joinPacket = {0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, data[12], data[13], data[14], data[15], 0x60, (byte) 0xd1, (byte) 0x9a, (byte) 0xe0, 0x01, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x04, 0x62, 0x61, 0x73, 0x65, 0x00, 0x0e, 0x15, 0x11, (byte) 0xee, (byte) 0xe2, 0x2e};
-        
         int bufferSize = 1024;
         sendPacket = new DatagramPacket(joinPacket, joinPacket.length, IPAddress, port);
         clientSocket.send(sendPacket);
@@ -289,13 +289,8 @@ public class Utils {
         while(true){
             clientSocket.receive(receivePacket);
             byte[] d = cleanup(receivePacket.getData());
-            String pack = new String(d, 0, d.length, "US-ASCII");
-            
-            if(first){
-                packets.append(pack);
-            }else{
-                packets.append(pack.substring(4));
-            }
+            String pack = new String(d, 0, d.length, StandardCharsets.US_ASCII);
+            packets.append(first ? pack : pack.substring(4));
             
             if(pack.contains(String.valueOf(port))){
                 break;
@@ -306,12 +301,10 @@ public class Utils {
         }
         
         String s = stripStart(packets.toString());
-        
         int modCount = s.charAt(0);
         String modData = s.substring(4);
         
         List<ServerModRequirement> releases = new ArrayList<>();
-        
         int offset = 0;
         for(int i = 0; i < modCount; i++){
             int len = modData.charAt(offset);
@@ -319,14 +312,11 @@ public class Utils {
             int major = modData.charAt(offset + 1 + len);
             int minor = modData.charAt(offset + 1 + len + 1);
             int patch = modData.charAt(offset + 1 + len + 2);
-            
             releases.add(new ServerModRequirement(name, new Version(major, minor, patch)));
-            
             offset += len + 8;
         }
         
         clientSocket.close();
-        
         return releases;
     }
     

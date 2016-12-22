@@ -17,7 +17,7 @@
 package me.vilsol.factorioupdater.models;
 
 import com.jaunt.UserAgent;
-import me.vilsol.factorioupdater.ModManager;
+import me.vilsol.factorioupdater.managers.ModManager;
 import me.vilsol.factorioupdater.Resource;
 import org.json.JSONObject;
 import org.junit.After;
@@ -41,8 +41,8 @@ public class ModPackTest {
         Mod mod = ModManager.getInstance().fetchMod("foo_bar");
         ModRelease mr = mod.matchRelease("=", new Version("1.0.0"));
 
-        Map<String, ModPackMod> mods = new HashMap<String, ModPackMod>() {{
-            put(mod.getName(), new ModPackMod(mod, mr, true));
+        Map<String, ModWithRelease> mods = new HashMap<String, ModWithRelease>() {{
+            put(mod.getName(), new ModWithRelease(mod, mr, true));
         }};
 
         File directory = new File(Resource.APP_MODPACK_DIR, "test_pack");

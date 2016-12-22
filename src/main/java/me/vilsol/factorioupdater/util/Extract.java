@@ -16,7 +16,6 @@
  */
 package me.vilsol.factorioupdater.util;
 
-import java.util.regex.Pattern;
 import org.rauschig.jarchivelib.ArchiveEntry;
 import org.rauschig.jarchivelib.ArchiveStream;
 import org.rauschig.jarchivelib.Archiver;
@@ -26,6 +25,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.regex.Pattern;
 
 /**
  * @author Nick Robson
@@ -57,7 +57,7 @@ public class Extract {
                 }
                 File extractTo = new File(dir, name);
                 extractTo.getParentFile().mkdirs();
-                entry.extract(extractTo);
+                entry.extract(dir);
                 entry = stream.getNextEntry();
             }
             return true;

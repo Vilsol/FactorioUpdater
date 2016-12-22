@@ -357,6 +357,10 @@ public class Tree<M> {
 
         return elements;
     }
-
-
+    
+    
+    public int size(){
+        return flatten().size();
+    }
+    
 }

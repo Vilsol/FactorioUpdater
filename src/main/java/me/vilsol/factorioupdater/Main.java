@@ -16,6 +16,8 @@
  */
 package me.vilsol.factorioupdater;
 
+import me.vilsol.factorioupdater.managers.ModpackManager;
+import me.vilsol.factorioupdater.managers.ProtocolManager;
 import me.vilsol.factorioupdater.ui.UpdaterUI;
 import me.vilsol.factorioupdater.util.StreamHandler;
 
@@ -23,13 +25,14 @@ public class Main {
     
     public static void main(String[] args){
         if(args.length >= 2 && args[0].equals("--protocol")){
-            ProtocolListener.send(args[1]);
+            ProtocolManager.send(args[1]);
             return;
         }
 
-        new Thread(new ProtocolListener()).start();
+        new Thread(new ProtocolManager()).start();
 
         StreamHandler.init();
+        ModpackManager.getInstance();
 
         System.out.println("os.name: " + System.getProperty("os.name"));
         System.out.println("os.version: " + System.getProperty("os.version"));
