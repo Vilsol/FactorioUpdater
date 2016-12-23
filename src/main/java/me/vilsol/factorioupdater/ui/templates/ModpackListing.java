@@ -78,14 +78,14 @@ public class ModpackListing extends FXMLTemplate<StackPane> {
         loading.setPreserveRatio(true);
         backgroundPane.setAlignment(Pos.CENTER);
         backgroundPane.add(loading, 0, 0);
+    
+        InnerShadow shade = new InnerShadow(3 , Color.BLACK);
+        shade.setInput(new ColorAdjust(0, 0, -0.1, 0));
+        DropShadow dropShadow = new DropShadow(10, 3, 3, Color.BLACK);
+        dropShadow.setInput(shade);
+        backgroundPane.setEffect(dropShadow);
         
         pool.onComplete(images -> {
-            try{
-                Thread.sleep(5000);
-            }catch(InterruptedException e){
-                e.printStackTrace();
-            }
-    
             Platform.runLater(() -> {
                 AtomicInteger row = new AtomicInteger(0);
                 AtomicInteger column = new AtomicInteger(0);
@@ -99,6 +99,7 @@ public class ModpackListing extends FXMLTemplate<StackPane> {
     
                 final int resetAt = (int) Math.sqrt(images.size());
                 images.forEach(img -> {
+                    // TODO Find out why it replaces transparent with white
                     ImageView image = new ImageView(img);
                     image.setFitWidth(250);
                     image.setFitHeight(170);
@@ -119,11 +120,6 @@ public class ModpackListing extends FXMLTemplate<StackPane> {
                 background.setFitHeight(backgroundPane.getPrefHeight());
                 FXUtils.inset(background, 7, 7, 7, 7);
                 FXUtils.round(background, 20, 20, 20, 20);
-        
-                InnerShadow shade = new InnerShadow(3 , Color.BLACK);
-                shade.setInput(new ColorAdjust(0, 0, -0.1, 0));
-                DropShadow dropShadow = new DropShadow(10, 3, 3, Color.BLACK);
-                dropShadow.setInput(shade);
                 background.setEffect(dropShadow);
                 
                 getPane().getChildren().add(0, background);

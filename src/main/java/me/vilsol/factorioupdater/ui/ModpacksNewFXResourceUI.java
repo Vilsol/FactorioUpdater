@@ -29,25 +29,30 @@ import me.vilsol.factorioupdater.ui.templates.ModpackListing;
 
 import java.util.HashMap;
 
-public class ModpacksNewFXResourceUI {
+public class ModpacksNewFXResourceUI extends Tab {
     
-    private static HashMap<ModPack, Pane> listings = new HashMap<>();
+    private HashMap<ModPack, Pane> listings = new HashMap<>();
     
-    public static Tab createModPacksTab(UpdaterUI.Transitioner transition) {
+    public ModpacksNewFXResourceUI(){
+        super("FX Resource Modpacks");
+        setClosable(false);
+    
         VBox vbox = new VBox();
         vbox.setSpacing(25);
         vbox.setPadding(new Insets(25));
         vbox.setBackground(new Background(new BackgroundFill(Color.web("#444444"), null, null)));
+        
+        setContent(vbox);
     
         Text loadingText = new Text("Loading Modpacks...");
         FlowPane packPane = new FlowPane();
-        
+    
         vbox.getChildren().add(loadingText);
         vbox.getChildren().add(packPane);
-        
+    
         packPane.setHgap(25);
         packPane.setVgap(25);
-        
+    
         ModpackManager.getInstance().getModpacks().forEach(pack -> {
             vbox.getChildren().remove(loadingText);
             ModpackListing modpackListing = new ModpackListing(pack);
@@ -74,10 +79,6 @@ public class ModpacksNewFXResourceUI {
                 }
             }
         }));
-        
-        Tab tab = new Tab("FX Resource Modpacks", vbox);
-        tab.setClosable(false);
-        return tab;
     }
     
 }

@@ -223,7 +223,7 @@ public class ModPack implements Mappable {
         
         flat.sort((o1, o2) -> o2.getLeaf().getMod().getDownloadCount() - o1.getLeaf().getMod().getDownloadCount());
         
-        for(int size : new int[]{49, 36, 25, 16, 9, 4, 1}){
+        for(int size : new int[]{16, 9, 4, 1}){
             if(flat.size() >= size){
                 return flat.subList(0, size).stream().map(x -> x.getLeaf().getMod().getAvatar()).collect(Collectors.toList());
             }

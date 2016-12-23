@@ -29,8 +29,7 @@ public class MainMenuUI {
         tabs.getTabs().add(ModpacksUI.createModPacksTab(transition));
         tabs.getTabs().add(ModsUI.createModsTab(transition));
         tabs.getTabs().add(ConsoleUI.createConsoleTab(transition));
-        tabs.getTabs().add(ModpacksNewFXUI.createModPacksTab(transition));
-        tabs.getTabs().add(ModpacksNewFXResourceUI.createModPacksTab(transition));
+        tabs.getTabs().add(new ModpacksNewFXResourceUI());
         return tabs;
     }
 
