@@ -5,8 +5,12 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.effect.InnerShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -19,15 +23,21 @@
         </opaqueInsets>
     </GridPane>
     <VBox alignment="CENTER" spacing="5">
-        <Text fx:id="packName" fill="white" text="&lt;pack_name&gt;">
+        <Text fx:id="packName" fill="white" text="&lt;pack_name&gt;" textAlignment="CENTER">
             <font>
                 <Font name="Arial" size="21.0" />
             </font>
+         <effect>
+             <DropShadow width="25" height="25" spread="0.8" />
+         </effect>
         </Text>
         <Text fx:id="packVersion" fill="white" text="&lt;pack_version&gt;">
             <font>
                 <Font name="Arial" size="16.0" />
             </font>
+            <effect>
+                <DropShadow width="25" height="25" spread="0.8" />
+            </effect>
         </Text>
     </VBox>
     <HBox alignment="BOTTOM_CENTER" spacing="159.0">
@@ -35,7 +45,7 @@
             <InnerShadow color="black" offsetY="-2" radius="5" />
         </effect>
 
-        <Button alignment="BOTTOM_RIGHT" text="Edit" textAlignment="CENTER" textFill="white" onAction="#onEdit">
+        <Button alignment="BOTTOM_RIGHT" onAction="#onEdit" text="Edit" textAlignment="CENTER" textFill="white">
             <padding>
                 <Insets bottom="6" left="12" right="12" top="6" />
             </padding>
@@ -52,7 +62,7 @@
          </styleClass>
 
         </Button>
-      <Button alignment="BOTTOM_RIGHT" text="Play" textAlignment="CENTER" textFill="white" onAction="#onPlay">
+      <Button alignment="BOTTOM_RIGHT" onAction="#onPlay" text="Play" textAlignment="CENTER" textFill="white">
          <padding>
             <Insets bottom="6" left="12" right="12" top="6" />
          </padding>

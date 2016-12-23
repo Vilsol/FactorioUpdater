@@ -27,7 +27,6 @@ import me.vilsol.factorioupdater.managers.ModpackManager;
 import me.vilsol.factorioupdater.models.ModPack;
 import me.vilsol.factorioupdater.ui.templates.ModpackListing;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ModpacksNewFXResourceUI {
@@ -48,19 +47,20 @@ public class ModpacksNewFXResourceUI {
         
         packPane.setHgap(25);
         packPane.setVgap(25);
+        
+        ModpackManager.getInstance().getModpacks().forEach(pack -> {
+            vbox.getChildren().remove(loadingText);
+            ModpackListing modpackListing = new ModpackListing(pack);
+            packPane.getChildren().add(modpackListing.getPane());
+            listings.put(pack, modpackListing.getPane());
+        });
     
         ModpackManager.getInstance().getModpacks().addListener((ListChangeListener<ModPack>) c -> Platform.runLater(() -> {
             while(c.next()){
                 if(c.wasAdded()){
                     c.getAddedSubList().forEach(pack -> {
                         vbox.getChildren().remove(loadingText);
-            
-                        ArrayList<String> imageLinks = new ArrayList<>();
-                        imageLinks.add("https://mods-data.factorio.com/pub_data/media_files/D2vLWKD4FByu.thumb.png");
-                        imageLinks.add("https://mods-data.factorio.com/pub_data/media_files/GsfUZAF1WWN6.thumb.png");
-                        imageLinks.add("https://mods-data.factorio.com/pub_data/media_files/IePuQ7iioYxE.thumb.png");
-                        imageLinks.add("https://mods-data.factorio.com/pub_data/media_files/ymbteZEPDCzQ.thumb.png");
-                        ModpackListing modpackListing = new ModpackListing(pack.getName(), pack.getVersion(), imageLinks);
+                        ModpackListing modpackListing = new ModpackListing(pack);
                         packPane.getChildren().add(modpackListing.getPane());
                         listings.put(pack, modpackListing.getPane());
                     });

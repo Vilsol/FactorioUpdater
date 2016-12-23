@@ -17,6 +17,7 @@
 package me.vilsol.factorioupdater;
 
 import java.io.File;
+import java.io.InputStream;
 
 /**
  * @author Nick Robson
@@ -36,7 +37,8 @@ public class Resource {
     public static final String APP_HOME_NAME = "FactorioUpdater";
 
     public static final File APP_MODPACK_DIR;
-
+    public static final InputStream DEFAULT_MODPACK_IMAGE = Resource.class.getResourceAsStream("/images/factorio-logo-small.png");
+    
     static{
         String os = System.getProperty("os.name").toUpperCase();
         File homeDir = new File(System.getProperty("user.home"));

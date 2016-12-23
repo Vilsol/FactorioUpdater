@@ -43,7 +43,8 @@ public class Mod implements Mappable {
     private final JSONObject data;
     private final String avatar;
     private final String homepage;
-
+    private final int downloadCount;
+    
     public Mod(JSONObject data){
         this.data = data;
         this.id = data.getInt("id");
@@ -52,6 +53,7 @@ public class Mod implements Mappable {
         this.title = data.getString("title");
         this.summary = data.getString("summary");
         this.homepage = data.getString("homepage");
+        this.downloadCount = data.getInt("downloads_count");
 
         try{
             this.creationDate = DatatypeConverter.parseDateTime(data.getString("created_at").replace(' ', 'T'));
@@ -110,4 +112,7 @@ public class Mod implements Mappable {
         return map;
     }
     
+    public int getDownloadCount(){
+        return downloadCount;
+    }
 }
