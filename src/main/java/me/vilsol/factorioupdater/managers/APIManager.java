@@ -50,22 +50,29 @@ public class APIManager {
     @Setter
     private boolean loggedIn;
     
+    private String username;
+    private String password;
+    
     private APIManager(){
         agent = HttpClientBuilder.create().disableRedirectHandling().setMaxConnPerRoute(100).build();
     }
     
     @Synchronized
     public void login(String username, String password) throws Exception {
+        if(this.username == null){
+            this.username = username;
+            this.password = password;
+        }
+        
         if(loggedIn){
             return;
         }
     
-        HttpClient httpClient = HttpClientBuilder.create().disableRedirectHandling().setMaxConnPerRoute(100).build();
-        String redirect = httpClient.execute(new HttpGet("https://mods.factorio.com/login")).getFirstHeader("Location").getValue().replace("http://", "https://");
-        org.apache.http.HttpResponse loginPage = httpClient.execute(new HttpGet(redirect));
+        String redirect = agent.execute(new HttpGet("https://mods.factorio.com/login")).getFirstHeader("Location").getValue().replace("http://", "https://");
+        org.apache.http.HttpResponse loginPage = agent.execute(new HttpGet(redirect));
         
         if(loginPage.getHeaders("Location").length > 0){
-            loginPage = httpClient.execute(new HttpGet(loginPage.getFirstHeader("Location").getValue()));
+            loginPage = agent.execute(new HttpGet(loginPage.getFirstHeader("Location").getValue()));
         }
     
         Matcher modMatcher = hiddenModMatcher.matcher(Utils.readStream(loginPage.getEntity().getContent()));
@@ -82,14 +89,14 @@ public class APIManager {
         args += "&username=" + URLEncoder.encode(username, "UTF-8");
         args += "&password=" + URLEncoder.encode(password, "UTF-8");
     
-        String location = httpClient.execute(new HttpPost("https://auth.factorio.com/login/process?" + args)).getFirstHeader("Location").getValue();
+        String location = agent.execute(new HttpPost("https://auth.factorio.com/login/process?" + args)).getFirstHeader("Location").getValue();
         if(location.startsWith("http://auth") || location.startsWith("https://auth")){
             throw new InvalidCredentialsException();
         }
         
-        httpClient.execute(new HttpGet(location));
+        agent.execute(new HttpGet(location));
     
-        Matcher siteMatcher = hiddenSiteMatcher.matcher(Utils.readStream(httpClient.execute(new HttpGet("https://www.factorio.com/login")).getEntity().getContent()));
+        Matcher siteMatcher = hiddenSiteMatcher.matcher(Utils.readStream(agent.execute(new HttpGet("https://www.factorio.com/login")).getEntity().getContent()));
     
         List<NameValuePair> params = new ArrayList<>();
         args = "";
@@ -112,12 +119,21 @@ public class APIManager {
     
         HttpPost httpPost = new HttpPost("https://www.factorio.com/login?" + args);
         httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-        HttpResponse siteLogin = httpClient.execute(httpPost);
+        HttpResponse siteLogin = agent.execute(httpPost);
         if(siteLogin.getStatusLine().getStatusCode() != 302){
             throw new InvalidCredentialsException();
         }
         
         loggedIn = true;
+    }
+    
+    public void reLogin(){
+        try{
+            loggedIn = false;
+            login(username, password);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
     
     public static class InvalidCredentialsException extends Exception {}

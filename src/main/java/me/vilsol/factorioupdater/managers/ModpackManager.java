@@ -138,6 +138,7 @@ public class ModpackManager {
         }
     
         pack.resolve();
+        pack.download();
     
         return pack;
     }

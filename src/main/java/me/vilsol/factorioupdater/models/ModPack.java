@@ -16,9 +16,14 @@
  */
 package me.vilsol.factorioupdater.models;
 
+import javafx.application.Platform;
 import lombok.Data;
+import lombok.Synchronized;
 import me.vilsol.factorioupdater.Resource;
+import me.vilsol.factorioupdater.managers.APIManager;
 import me.vilsol.factorioupdater.managers.ModManager;
+import me.vilsol.factorioupdater.ui.templates.DownloadProgressWindow;
+import me.vilsol.factorioupdater.util.DownloadPool;
 import me.vilsol.factorioupdater.util.Mappable;
 import me.vilsol.factorioupdater.util.Utils;
 import org.json.JSONObject;
@@ -28,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -47,6 +53,7 @@ public class ModPack implements Mappable {
     
     private Tree<ModWithRelease> dependencies = new Tree<>((Tree<ModWithRelease>) null);
     private List<Dependency> missing = new ArrayList<>();
+    private List<ModWithRelease> downloaded = new ArrayList<>();
 
     public ModPack(String name, File directory, Version version, Version factorioVersion, Map<String, ModWithRelease> mods){
         this.name = name;
@@ -63,28 +70,47 @@ public class ModPack implements Mappable {
                 throw new RuntimeException("Failed to create mods directory. Check your permissions for: " + modsDirectory);
             }
         }
-
-        File packJson = new File(directory, "pack.json");
-
-        if(!packJson.exists()){
-            try{
-                if(!packJson.createNewFile()){
-                    throw new RuntimeException("Failed to create pack.json file. Check your permissions for: " + directory);
+        
+        saveJson(false);
+    }
+    
+    @Synchronized
+    private void saveJson(boolean force){
+        File packJson = new File(rootDirectory, "pack.json");
+    
+        if(!packJson.exists() || force){
+            if(!packJson.exists()){
+                try{
+                    if(!packJson.createNewFile()){
+                        throw new RuntimeException("Failed to create pack.json file. Check your permissions for: " + rootDirectory);
+                    }
+                }catch(IOException e){
+                    throw new RuntimeException(e);
                 }
-            }catch(IOException e){
-                throw new RuntimeException(e);
             }
-
+        
             JSONObject data = new JSONObject();
+            data.put("schema", "v1");
             data.put("name", name);
             data.put("version", version.toString());
             data.put("factorio_version", factorioVersion.toString());
             data.put("mods", this.mods.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getAsJson())));
-
+            
+            Map<String, Object> dl = new HashMap<>();
+            downloaded.forEach(x -> {
+                JSONObject o = new JSONObject();
+                o.put("mod", x.getMod().getName());
+                o.put("avatar", x.getMod().getAvatar());
+                o.put("release", x.getModRelease().getVersion());
+                dl.put(x.getModRelease().getFileName(), o);
+            });
+            
+            data.put("downloaded", dl);
+            
             try{
                 Files.write(packJson.toPath(), data.toString(4).getBytes());
             }catch(IOException e){
-                throw new RuntimeException("Failed to write to pack.json file. Check your permissions for: " + directory);
+                throw new RuntimeException("Failed to write to pack.json file. Check your permissions for: " + rootDirectory);
             }
         }
     }
@@ -170,6 +196,14 @@ public class ModPack implements Mappable {
                 throw new RuntimeException("Failed to create mods directory. Check your permissions for: " + modsDirectory);
             }
         }
+        
+        while(!APIManager.getInstance().isLoggedIn()){
+            try{
+                Thread.sleep(10);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }
+        }
 
         Set<ModWithRelease> toDownload = mods.values().stream().flatMap(mod -> {
             ModRelease release = mod.getModRelease();
@@ -183,23 +217,60 @@ public class ModPack implements Mappable {
         if(toDownload.size() > 0){
             double fileSize = toDownload.stream().mapToLong(m -> m.getModRelease().getFileSize()).sum();
             System.out.println("Need to download " + toDownload.size() + " mods (" + (new DecimalFormat("#.##").format(fileSize / Resource.FILE_SIZE_TO_MEGABYTES)) + " MB)");
-            System.out.println();
         } else {
             System.out.println("All set! No mods need to be downloaded!");
         }
-
+    
+        ArrayList<DownloadTask> tasks = new ArrayList<>();
         for(ModWithRelease mod : toDownload){
             System.out.println("Downloading " + mod.getModRelease().getModName() + " " + mod.getModRelease().getVersion() + " (" + (new DecimalFormat("#.##").format(mod.getModRelease().getFileSize() / Resource.FILE_SIZE_TO_MEGABYTES)) + " MB)");
-
-            try {
-                File downloadTo = new File(modsDirectory, mod.getModRelease().getFileName());
-                Utils.download(Resource.URL_FACTORIO_MODS + mod.getModRelease().getDownloadURL(), downloadTo);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+    
+            String url = Resource.URL_FACTORIO_MODS + mod.getModRelease().getDownloadURL();
+            File downloadTo = new File(modsDirectory, mod.getModRelease().getFileName());
+            tasks.add(new DownloadTask(mod.getMod().getName(), url, downloadTo, mod.getModRelease().getFileSize(), downloadTask -> {
+                saveJson(true);
+                downloaded.add(mod);
+            }));
         }
-
-        System.out.println(modsDirectory.getAbsolutePath());
+    
+        Platform.runLater(() -> {
+            DownloadProgressWindow progressWindow = new DownloadProgressWindow();
+            AtomicInteger skipper = new AtomicInteger(0);
+            new DownloadPool(tasks, dp -> {
+                if(skipper.getAndIncrement() % 10 != 0){
+                    return;
+                }
+                
+                Platform.runLater(() -> {
+                    try{
+                        String totalSize = Utils.formatSize(dp.getTotalSize());
+                        String totalDlSize = Utils.formatSize(dp.getTotalDlSize());
+        
+                        String currentSize = Utils.formatSize(dp.getCurrentSize());
+                        String currentDlSize = Utils.formatSize(dp.getCurrentDlSize());
+        
+                        progressWindow.getDownloadAll().setText(String.format("Downloaded %d/%d (%sMB / %sMB)", dp.getTotalDlCount(), dp.getTotalCount(), totalDlSize, totalSize));
+                        progressWindow.getDownloadCurrent().setText(String.format("Downloading %s (%sMB / %sMB)", dp.getCurrentName(), currentDlSize, currentSize));
+        
+                        double currentProgress = Math.min((double) dp.getCurrentDlSize() / (double) dp.getCurrentSize(), 100);
+                        progressWindow.getProgressCurrent().setProgress(currentProgress);
+                        progressWindow.getCurrentText().setText(Math.floor(currentProgress * 100) + "%");
+        
+                        double totalProgress = Math.min((double) dp.getTotalDlSize() / (double) dp.getTotalSize(), 100);
+                        progressWindow.getProgressTotal().setProgress(totalProgress);
+                        progressWindow.getTotalText().setText(Math.floor(totalProgress * 100) + "%");
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                });
+            }, () -> Platform.runLater(() -> {
+                progressWindow.getStage().close();
+            }));
+        });
+        
+        //new DownloadPool(tasks, downloadProgress -> {
+            
+        //});
     }
     
     @Override

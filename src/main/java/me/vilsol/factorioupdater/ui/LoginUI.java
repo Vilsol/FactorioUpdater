@@ -74,14 +74,14 @@ public class LoginUI {
                     System.out.println("Logging in...");
     
                     APIManager.getInstance().login(username, password);
-                        System.out.println("Successfully logged in as " + username + "!");
-                        Platform.runLater(() -> transition.transition(MainMenuUI.create(transition)));
-                        if (!credentials.exists()) {
-                            JSONObject creds = new JSONObject();
-                            creds.put("username", username);
-                            creds.put("password", password);
-                            Files.write(credentials.toPath(), creds.toString(4).getBytes(), StandardOpenOption.CREATE);
-                        }
+                    System.out.println("Successfully logged in as " + username + "!");
+                    Platform.runLater(() -> transition.transition(MainMenuUI.create(transition)));
+                    if (!credentials.exists()) {
+                        JSONObject creds = new JSONObject();
+                        creds.put("username", username);
+                        creds.put("password", password);
+                        Files.write(credentials.toPath(), creds.toString(4).getBytes(), StandardOpenOption.CREATE);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     UI.showAlert(Alert.AlertType.WARNING, null, "Login failed, please retry!");

@@ -41,7 +41,6 @@ public class ModRelease implements Comparable<ModRelease>, Mappable {
     private final String modName;
     private final String modAuthor;
     private final String modTitle;
-    private final String modDescription;
 
     public ModRelease(JSONObject data){
         this.json = data;
@@ -62,7 +61,6 @@ public class ModRelease implements Comparable<ModRelease>, Mappable {
         this.modName = infoJson.getString("name");
         this.modAuthor = infoJson.getString("author");
         this.modTitle = infoJson.getString("name");
-        this.modDescription = infoJson.getString("author");
 
         this.dependencies = new ArrayList<>();
     
@@ -104,7 +102,6 @@ public class ModRelease implements Comparable<ModRelease>, Mappable {
         map.put("modName", modName);
         map.put("modAuthor", modAuthor);
         map.put("modTitle", modTitle);
-        map.put("modDescription", modDescription);
         return map;
     }
     

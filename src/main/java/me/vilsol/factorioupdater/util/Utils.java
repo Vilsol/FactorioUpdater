@@ -17,17 +17,23 @@
 package me.vilsol.factorioupdater.util;
 
 import com.google.common.io.ByteStreams;
-import com.jaunt.HttpResponse;
-import com.jaunt.UserAgent;
-import me.vilsol.factorioupdater.managers.ModManager;
+import me.vilsol.factorioupdater.Resource;
+import me.vilsol.factorioupdater.managers.APIManager;
 import me.vilsol.factorioupdater.models.ServerModRequirement;
 import me.vilsol.factorioupdater.models.Version;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -106,11 +112,19 @@ public class Utils {
     }
     
     public static boolean download(String url, File file) throws Exception {
-        HttpResponse httpResponse = ModManager.getInstance().getAgent().sendHEAD(url);
-        UserAgent agent = ModManager.getInstance().getAgent().copy();
+        HttpResponse execute = APIManager.getInstance().getAgent().execute(new HttpHead(url));
+        String downloadURL = execute.getFirstHeader("Location").getValue();
+    
+        System.out.println(downloadURL);
+        if(downloadURL.contains("login")){
+            System.out.println("Re-Logging in");
+            APIManager.getInstance().reLogin();
+        }
 
         try {
-            agent.download(httpResponse.getHeader("Location"), file);
+            HttpResponse response = APIManager.getInstance().getAgent().execute(new HttpGet(downloadURL));
+            InputStream content = response.getEntity().getContent();
+            IOUtils.copy(content, new FileOutputStream(file));
         }catch (Exception e){
             file.delete();
             throw new RuntimeException(e);
@@ -167,91 +181,6 @@ public class Utils {
         if (depth > 5)
             return "Unknown Size";
         return l + new String[]{ "B", "kB", "MB", "GB", "TB", "PB" }[depth];
-    }
-    
-    public static Tuple<Map<String, List<String>>, String> sendPost(String url, Map<String, String> data, Map<String, String> headers) throws Exception {
-        URL obj = new URL(url);
-        HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
-        
-        con.setRequestMethod("POST");
-        
-        if(headers != null){
-            for(Map.Entry<String, String> e : headers.entrySet()){
-                con.setRequestProperty(e.getKey(), e.getValue());
-            }
-        }
-        
-        if(data != null){
-            String urlParameters = "";
-    
-            for(Map.Entry<String, String> e : data.entrySet()){
-                if(!urlParameters.equals("")){
-                    urlParameters += "&";
-                }
-        
-                urlParameters += e.getKey() + "=" + URLEncoder.encode(e.getValue(), "UTF-8");
-            }
-    
-            System.out.println(urlParameters);
-    
-            con.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            wr.writeBytes(urlParameters);
-            wr.flush();
-            wr.close();
-        }
-    
-        InputStream stream = con.getResponseCode() < 400 ? con.getInputStream() : con.getErrorStream();
-        BufferedReader in = new BufferedReader(new InputStreamReader(stream));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
-        
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        
-        in.close();
-     
-        return new Tuple<>(con.getHeaderFields(), response.toString());
-    }
-    
-    public static Tuple<Map<String, List<String>>, String> sendGet(String url, Map<String, String> headers) throws Exception {
-        URL obj = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-        
-        con.setRequestMethod("GET");
-    
-        if(headers != null){
-            for(Map.Entry<String, String> e : headers.entrySet()){
-                con.setRequestProperty(e.getKey(), e.getValue());
-            }
-        }
-    
-        InputStream stream = con.getResponseCode() < 400 ? con.getInputStream() : con.getErrorStream();
-        BufferedReader in = new BufferedReader(new InputStreamReader(stream));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
-    
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-    
-        in.close();
-    
-        return new Tuple<>(con.getHeaderFields(), response.toString());
-    }
-    
-    public static void login(String username, String password) throws Exception {
-        System.out.println("STARTING LOGIN");
-        String redirect = sendGet("https://mods.factorio.com/login", null).getFirst().get("Location").get(0);
-        Tuple<Map<String, List<String>>, String> loginPage = sendGet(redirect, null);
-        
-        if(loginPage.getFirst().get("Location").size() > 0){
-            loginPage = sendGet(loginPage.getFirst().get("Location").get(0), null);
-        }
-        
-        System.out.println(loginPage);
-        System.out.println("END LOGIN");
     }
     
     public static String readStream(InputStream stream) throws IOException {
@@ -356,6 +285,12 @@ public class Utils {
         }
         
         return Arrays.copyOfRange(data, 0, ex);
+    }
+    
+    private static final DecimalFormat sizeFormat = new DecimalFormat("#.##");
+    
+    public static String formatSize(long size){
+        return sizeFormat.format(size / Resource.FILE_SIZE_TO_MEGABYTES);
     }
     
 }

@@ -16,20 +16,19 @@
  */
 package me.vilsol.factorioupdater.util;
 
-import javafx.util.Callback;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 public class FuturePool<T> {
 
     private Thread listener;
     
     private List<Future<T>> futures = new CopyOnWriteArrayList<>();
-    private List<Callback<List<T>, Void>> callbacks = new CopyOnWriteArrayList<>();
+    private List<Consumer<List<T>>> callbacks = new CopyOnWriteArrayList<>();
     private boolean started;
     
     private void restart(){
@@ -49,7 +48,7 @@ public class FuturePool<T> {
                     list.add(next.get());
                 }
                 
-                callbacks.forEach(c -> c.call(list));
+                callbacks.forEach(c -> c.accept(list));
             }catch(InterruptedException | ExecutionException e){
                 e.printStackTrace();
             }
@@ -65,7 +64,7 @@ public class FuturePool<T> {
         }
     }
     
-    public void onComplete(Callback<List<T>, Void> callback){
+    public void onComplete(Consumer<List<T>> callback){
         if(!callbacks.contains(callback)){
             callbacks.add(callback);
         }

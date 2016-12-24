@@ -124,8 +124,6 @@ public class ModpackListing extends FXMLTemplate<StackPane> {
                 
                 getPane().getChildren().add(0, background);
             });
-            
-            return null;
         });
         
         pool.start();
