@@ -83,6 +83,13 @@ public class DownloadPool {
                     
                     output.close();
                     input.close();
+                    
+                    if(task.getOnComplete() != null){
+                        task.getOnComplete().accept(task);
+                    }
+                    
+                    progress.currentDlSize = task.getSize();
+                    observer.accept(progress);
                 }catch(Exception e){
                     task.getTarget().delete();
                     throw new RuntimeException(e);
