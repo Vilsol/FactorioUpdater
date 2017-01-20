@@ -72,7 +72,7 @@ public class ModpackListing extends FXMLTemplate<StackPane> {
         FuturePool<Image> pool = new FuturePool<>();
         pack.getImageLinks().forEach(url -> pool.addFuture(FXUtils.getImage(url)));
     
-        ImageView loading = new ImageView(new Image("/images/loading-3.gif"));
+        ImageView loading = new ImageView(new Image("/images/loading.gif"));
         loading.setFitHeight(backgroundPane.getPrefWidth());
         loading.setFitHeight(backgroundPane.getPrefHeight());
         loading.setPreserveRatio(true);
