@@ -8,34 +8,39 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane prefHeight="110.0" prefWidth="500.0" style="-fx-background-color: #444;" xmlns="http://javafx.com/javafx/8.0.45" xmlns:fx="http://javafx.com/fxml/1">
-    <top>
-        <Text fx:id="downloadAll" fill="WHITE" text="Downloaded 10/53 (23.16MB / 95.73MB)" BorderPane.alignment="CENTER">
-            <BorderPane.margin>
-                <Insets top="10.0" />
-            </BorderPane.margin>
-        </Text>
-    </top>
-    <center>
-        <Text fx:id="downloadCurrent" fill="WHITE" text="Downloading FooBar (0.83MB / 2.50MB)" BorderPane.alignment="CENTER">
-            <font>
-                <Font size="14.0" />
-            </font>
-        </Text>
-    </center>
-    <bottom>
-       <VBox prefHeight="45.0" prefWidth="500.0" spacing="5.0" BorderPane.alignment="CENTER">
-           <StackPane>
-               <ProgressBar fx:id="progressCurrent" prefHeight="20.0" prefWidth="500.0" progress="0.332" style="-fx-accent: #ff9300;" BorderPane.alignment="CENTER" />
-               <Text fx:id="currentText" text="Current 33%" />
-           </StackPane>
-           <StackPane>
-               <ProgressBar fx:id="progressTotal" prefHeight="20.0" prefWidth="500.0" progress="0.38" style="-fx-accent: #ff9300;" BorderPane.alignment="CENTER" />
-               <Text fx:id="totalText" text="Total 38%" />
-           </StackPane>
+<VBox alignment="CENTER" prefWidth="500.0" spacing="5.0" style="-fx-background-color: #444;" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1">
+     <Text fx:id="downloadAll" fill="WHITE" text="Downloaded 10/53 (23.16MB / 95.73MB)" BorderPane.alignment="CENTER">
          <BorderPane.margin>
-            <Insets bottom="5.0" top="10.0" />
+             <Insets top="10.0" />
          </BorderPane.margin>
-       </VBox>
-    </bottom>
-</BorderPane>
+     </Text>
+      <Text fx:id="downloadCurrent" fill="WHITE" text="Downloading FooBar (0.83MB / 2.50MB)" textAlignment="CENTER" textOrigin="CENTER">
+          <font>
+              <Font size="14.0" />
+          </font>
+      </Text>
+     <Text fx:id="downloadSpeed" fill="WHITE" text="712KB/s - 1h 15m 30s Remaining" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+             <Insets top="10.0" />
+         </BorderPane.margin>
+     </Text>
+     <VBox prefHeight="45.0" prefWidth="500.0" spacing="5.0" BorderPane.alignment="CENTER">
+         <StackPane>
+             <ProgressBar fx:id="progressCurrent" prefHeight="20.0" prefWidth="500.0" progress="0.332" style="-fx-accent: #ff9300;" BorderPane.alignment="CENTER" />
+             <Text fx:id="currentText" text="Current 33%" />
+         </StackPane>
+         <StackPane>
+             <ProgressBar fx:id="progressTotal" prefHeight="20.0" prefWidth="500.0" progress="0.38" style="-fx-accent: #ff9300;" BorderPane.alignment="CENTER" />
+             <Text fx:id="totalText" text="Total 38%" />
+         </StackPane>
+         <BorderPane.margin>
+             <Insets bottom="5.0" top="10.0" />
+         </BorderPane.margin>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
+     </VBox>
+   <padding>
+      <Insets left="5.0" right="5.0" />
+   </padding>
+</VBox>

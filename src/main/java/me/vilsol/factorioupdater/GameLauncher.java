@@ -16,19 +16,23 @@
  */
 package me.vilsol.factorioupdater;
 
-import com.jaunt.NotFound;
-import com.jaunt.ResponseException;
-import com.jaunt.UserAgent;
-import com.jaunt.component.Form;
-import me.vilsol.factorioupdater.managers.ModManager;
+import me.vilsol.factorioupdater.managers.APIManager;
+import me.vilsol.factorioupdater.models.DownloadTask;
+import me.vilsol.factorioupdater.ui.templates.DownloadProgressWindow;
+import me.vilsol.factorioupdater.util.DownloadPool;
 import me.vilsol.factorioupdater.util.Extract;
-import me.vilsol.factorioupdater.util.Utils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
 /**
@@ -116,40 +120,48 @@ public class GameLauncher {
             System.err.println("Unknown operating system -- cannot download");
             return false;
         }
+        
         File mainInstallDirectory = new File(Resource.APP_HOME_DIR, "versions");
         mainInstallDirectory = new File(mainInstallDirectory, factorioVersion);
+        
+        if(!mainInstallDirectory.exists()){
+            if(!mainInstallDirectory.mkdirs()){
+                throw new RuntimeException("Could not create directory: " + mainInstallDirectory);
+            }
+        }
+        
         File installFile = new File(mainInstallDirectory, "factorio-files." + ext);
         if (!installFile.exists()) {
             try {
-                UserAgent userAgent = ModManager.getInstance().getAgent().copy();
-                userAgent.settings.maxRedirects = 1;
-                userAgent.visit("http://www.factorio.com/login");
-
-                Form form = userAgent.doc.getForm(0);
-                form.setTextField("username_or_email", username);
-                form.setPassword("password", password);
-                form.submit();
-
-                userAgent.visit(downloadUrl);
-                return false;
-            } catch (ResponseException e) {
-                try {
-                    downloadUrl = e.getRequestUrlData();
-                    String[] spl = downloadUrl.split("\\?");
-                    if (spl.length == 2 && spl[0].endsWith(ext)) {
-                        mainInstallDirectory.mkdirs();
-                        Utils.download(downloadUrl, installFile, downloadObserver);
-                    } else {
-                        e.printStackTrace();
-                        return false;
+                APIManager.getInstance().login(username, password);
+                HttpClient agent = APIManager.getInstance().getAgent();
+                HttpResponse response = agent.execute(new HttpGet(downloadUrl));
+                String location = response.getFirstHeader("Location").getValue();
+                Integer size = Integer.valueOf(agent.execute(new HttpHead(location)).getFirstHeader("Content-Length").getValue());
+                System.out.println(size);
+    
+                DownloadTask task = new DownloadTask("Factorio v" + factorioVersion, location, installFile, size, null);
+    
+                AtomicInteger skipper = new AtomicInteger();
+                DownloadPool downloadPool = new DownloadPool(Collections.singletonList(task), progress -> {
+                    if(skipper.getAndIncrement() % 20 != 0){
+                        return;
                     }
-                } catch (IOException ex) {
-                    e.printStackTrace();
-                    return false;
+                    
+                    System.out.println(String.format("%.2f%%", (double) progress.getTotalDlSize() / (double) progress.getTotalSize() * 100));
+                }, null);
+                
+                try{
+                    DownloadProgressWindow progressWindow = new DownloadProgressWindow();
+                    progressWindow.setDownloadPool(downloadPool);
+                }catch(ExceptionInInitializerError ignored){
                 }
-            } catch (NotFound e) {
-                e.printStackTrace();
+                
+                downloadPool.run();
+    
                 return false;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
 

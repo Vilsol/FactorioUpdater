@@ -16,22 +16,6 @@
  */
 package me.vilsol.factorioupdater.old;
 
-import com.jaunt.HttpResponse;
-import com.jaunt.UserAgent;
-import org.json.JSONObject;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionListener;
-import java.io.*;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
-import java.util.regex.Pattern;
-
 public class Updater {
 
     /*

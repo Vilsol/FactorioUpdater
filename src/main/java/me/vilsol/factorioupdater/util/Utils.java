@@ -16,15 +16,9 @@
  */
 package me.vilsol.factorioupdater.util;
 
-import com.google.common.io.ByteStreams;
 import me.vilsol.factorioupdater.Resource;
-import me.vilsol.factorioupdater.managers.APIManager;
 import me.vilsol.factorioupdater.models.ServerModRequirement;
 import me.vilsol.factorioupdater.models.Version;
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
 
 import java.io.*;
 import java.net.*;
@@ -78,7 +72,7 @@ public class Utils {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(source.length / 2);
     
         try(OutputStream deflater = new DeflaterOutputStream(outputStream)){
-            ByteStreams.copy(sourceStream, deflater);
+            copy(sourceStream, deflater);
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -95,12 +89,28 @@ public class Utils {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(source.length / 2);
     
         try(InputStream inflater = new InflaterInputStream(sourceStream)){
-            ByteStreams.copy(inflater, outputStream);
+            copy(inflater, outputStream);
         }catch(IOException e){
             e.printStackTrace();
         }
 
         return outputStream.toByteArray();
+    }
+    
+    public static long copy(InputStream from, OutputStream to) throws IOException {
+        byte[] buf = new byte[8192];
+        long total = 0L;
+    
+        while(true) {
+            int r = from.read(buf);
+            
+            if(r == -1) {
+                return total;
+            }
+        
+            to.write(buf, 0, r);
+            total += (long) r;
+        }
     }
     
     public static byte[] base64Encode(byte[] raw) {
@@ -111,28 +121,6 @@ public class Utils {
         return Base64.getDecoder().decode(encoded);
     }
     
-    public static boolean download(String url, File file) throws Exception {
-        HttpResponse execute = APIManager.getInstance().getAgent().execute(new HttpHead(url));
-        String downloadURL = execute.getFirstHeader("Location").getValue();
-    
-        System.out.println(downloadURL);
-        if(downloadURL.contains("login")){
-            System.out.println("Re-Logging in");
-            APIManager.getInstance().reLogin();
-        }
-
-        try {
-            HttpResponse response = APIManager.getInstance().getAgent().execute(new HttpGet(downloadURL));
-            InputStream content = response.getEntity().getContent();
-            IOUtils.copy(content, new FileOutputStream(file));
-        }catch (Exception e){
-            file.delete();
-            throw new RuntimeException(e);
-        }
-
-        return true;
-    }
-
     public static void download(String urlString, File installFile, BiConsumer<Long, Long> downloadObserver) throws IOException {
         if (downloadObserver == null) {
             downloadObserver = (a, b) -> {

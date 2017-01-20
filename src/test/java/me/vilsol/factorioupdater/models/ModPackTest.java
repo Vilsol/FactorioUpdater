@@ -16,7 +16,7 @@
  */
 package me.vilsol.factorioupdater.models;
 
-import com.jaunt.UserAgent;
+import me.vilsol.factorioupdater.managers.APIManager;
 import me.vilsol.factorioupdater.managers.ModManager;
 import me.vilsol.factorioupdater.Resource;
 import org.json.JSONObject;
@@ -67,14 +67,8 @@ public class ModPackTest {
 
         assertNotNull(username);
         assertNotNull(password);
-
-        UserAgent agent = new UserAgent();
-        agent.visit("https://mods.factorio.com/login");
-        agent.doc.getForm(0).setTextField("username", username);
-        agent.doc.getForm(0).setPassword("password", password);
-        agent.doc.getForm(0).submit();
-
-        ModManager.getInstance().setAgent(agent);
+    
+        APIManager.getInstance().login(username, password);
     }
 
     @Test

@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -235,42 +234,10 @@ public class ModPack implements Mappable {
     
         Platform.runLater(() -> {
             DownloadProgressWindow progressWindow = new DownloadProgressWindow();
-            AtomicInteger skipper = new AtomicInteger(0);
-            new DownloadPool(tasks, dp -> {
-                if(skipper.getAndIncrement() % 10 != 0){
-                    return;
-                }
-                
-                Platform.runLater(() -> {
-                    try{
-                        String totalSize = Utils.formatSize(dp.getTotalSize());
-                        String totalDlSize = Utils.formatSize(dp.getTotalDlSize());
-        
-                        String currentSize = Utils.formatSize(dp.getCurrentSize());
-                        String currentDlSize = Utils.formatSize(dp.getCurrentDlSize());
-        
-                        progressWindow.getDownloadAll().setText(String.format("Downloaded %d/%d (%sMB / %sMB)", dp.getTotalDlCount(), dp.getTotalCount(), totalDlSize, totalSize));
-                        progressWindow.getDownloadCurrent().setText(String.format("Downloading %s (%sMB / %sMB)", dp.getCurrentName(), currentDlSize, currentSize));
-        
-                        double currentProgress = Math.min((double) dp.getCurrentDlSize() / (double) dp.getCurrentSize(), 100);
-                        progressWindow.getProgressCurrent().setProgress(currentProgress);
-                        progressWindow.getCurrentText().setText(Math.floor(currentProgress * 100) + "%");
-        
-                        double totalProgress = Math.min((double) dp.getTotalDlSize() / (double) dp.getTotalSize(), 100);
-                        progressWindow.getProgressTotal().setProgress(totalProgress);
-                        progressWindow.getTotalText().setText(Math.floor(totalProgress * 100) + "%");
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }
-                });
-            }, () -> Platform.runLater(() -> {
-                progressWindow.getStage().close();
-            }));
+            DownloadPool downloadPool = new DownloadPool(tasks, null, () -> Platform.runLater(() -> progressWindow.getStage().close()));
+            progressWindow.setDownloadPool(downloadPool);
+            new Thread(downloadPool).start();
         });
-        
-        //new DownloadPool(tasks, downloadProgress -> {
-            
-        //});
     }
     
     @Override

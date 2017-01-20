@@ -46,7 +46,7 @@ public class GameLauncherTest {
 
         try {
             Path tempFile = Files.createTempDirectory("factorio-updater-download");
-            boolean res = GameLauncher.fetchFactorio("0.14.20", username, password, tempFile.toFile(), null);
+            boolean res = GameLauncher.fetchFactorio("0.14.21", username, password, tempFile.toFile(), null);
             if (!res)
                 return;
             System.out.println("Files:");

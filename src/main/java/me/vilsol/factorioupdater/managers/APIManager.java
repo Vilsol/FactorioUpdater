@@ -29,6 +29,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +59,7 @@ public class APIManager {
     }
     
     @Synchronized
-    public void login(String username, String password) throws Exception {
+    public void login(String username, String password) throws InvalidCredentialsException, IOException {
         if(this.username == null){
             this.username = username;
             this.password = password;

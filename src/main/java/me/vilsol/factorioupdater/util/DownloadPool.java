@@ -16,10 +16,7 @@
  */
 package me.vilsol.factorioupdater.util;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import me.vilsol.factorioupdater.managers.APIManager;
 import me.vilsol.factorioupdater.models.DownloadTask;
 import org.apache.http.HttpResponse;
@@ -31,77 +28,102 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class DownloadPool {
+public class DownloadPool implements Runnable {
+    
+    private List<DownloadTask> tasks;
 
+    @Getter
+    @Setter
+    private Consumer<DownloadProgress> observer;
+    private Runnable completion;
+    
     public DownloadPool(List<DownloadTask> tasks, Consumer<DownloadProgress> observer, Runnable completion){
-        Thread listener = new Thread(() -> {
-            DownloadProgress progress = new DownloadProgress(tasks.size(), tasks.stream().mapToLong(DownloadTask::getSize).sum());
-            for(int i = 0; i < tasks.size(); i++){
-                DownloadTask task = tasks.get(i);
-                progress.currentSize = task.getSize();
-                progress.currentDlSize = 0;
-                progress.currentName = task.getName();
+        this.tasks = tasks;
+        this.observer = observer;
+        this.completion = completion;
+    }
+    
+    @Override
+    public void run(){
+        DownloadProgress progress = new DownloadProgress(tasks.size(), tasks.stream().mapToLong(DownloadTask::getSize).sum());
+        for(int i = 0; i < tasks.size(); i++){
+            DownloadTask task = tasks.get(i);
+            progress.currentSize = task.getSize();
+            progress.currentDlSize = 0;
+            progress.currentName = task.getName();
+            
+            if(observer != null){
                 observer.accept(progress);
-    
-                try{
-                    String url = task.getUrl();
-                    HttpResponse response;
+            }
+        
+            try{
+                String url = task.getUrl();
+                HttpResponse response;
+            
+                do{
+                    response = APIManager.getInstance().getAgent().execute(new HttpHead(url));
+                
+                    if(!response.containsHeader("Location")){
+                        break;
+                    }
+                
+                    url = response.getFirstHeader("Location").getValue();
+                
+                    if(url.contains("login")){
+                        System.out.println("Re-Logging in");
+                        APIManager.getInstance().reLogin();
+                    }
+                }while(response.containsHeader("Location"));
+            
+                response = APIManager.getInstance().getAgent().execute(new HttpGet(url));
+                InputStream input = response.getEntity().getContent();
+                FileOutputStream output = new FileOutputStream(task.getTarget());
+            
+                int c = 1;
+                byte[] buf = new byte[8192];
+                while (c > 0) {
+                    c = input.read(buf, 0, buf.length);
+                
+                    if (c <= 0) {
+                        break;
+                    }
+                
+                    output.write(buf, 0, c);
+                    progress.currentDlSize += c;
+                    progress.totalDlSize += c;
                     
-                    do{
-                        response = APIManager.getInstance().getAgent().execute(new HttpHead(url));
-                        
-                        if(!response.containsHeader("Location")){
-                            break;
-                        }
-                        
-                        url = response.getFirstHeader("Location").getValue();
-    
-                        if(url.contains("login")){
-                            System.out.println("Re-Logging in");
-                            APIManager.getInstance().reLogin();
-                        }
-                    }while(response.containsHeader("Location"));
-    
-                    response = APIManager.getInstance().getAgent().execute(new HttpGet(url));
-                    InputStream input = response.getEntity().getContent();
-                    FileOutputStream output = new FileOutputStream(task.getTarget());
-    
-                    int c = 1;
-                    byte[] buf = new byte[8192];
-                    while (c > 0) {
-                        c = input.read(buf, 0, buf.length);
-                        
-                        if (c <= 0) {
-                            break;
-                        }
-                        
-                        output.write(buf, 0, c);
-                        progress.currentDlSize += c;
-                        progress.totalDlSize += c;
+                    if(observer != null){
                         observer.accept(progress);
                     }
-                    
-                    output.close();
-                    input.close();
-                    
-                    if(task.getOnComplete() != null){
-                        task.getOnComplete().accept(task);
-                    }
-                    
-                    progress.currentDlSize = task.getSize();
+                }
+            
+                output.close();
+                input.close();
+            
+                if(task.getOnComplete() != null){
+                    task.getOnComplete().accept(task);
+                }
+            
+                progress.currentDlSize = task.getSize();
+
+                if(observer != null){
                     observer.accept(progress);
-                }catch(Exception e){
-                    task.getTarget().delete();
-                    throw new RuntimeException(e);
+                }
+            }catch(Exception e){
+                if(!task.getTarget().delete()){
+                    e.printStackTrace();
+                    throw new RuntimeException("Could not cleanup " + task.getTarget());
                 }
                 
-                progress.totalDlCount++;
+                throw new RuntimeException(e);
             }
+        
+            progress.totalDlCount++;
+        }
     
+        if(completion != null){
             completion.run();
-        });
-    
-        listener.start();
+        }
     }
     
     @Getter

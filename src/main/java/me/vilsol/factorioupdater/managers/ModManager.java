@@ -16,11 +16,8 @@
  */
 package me.vilsol.factorioupdater.managers;
 
-import com.jaunt.UserAgent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import me.vilsol.factorioupdater.Resource;
 import me.vilsol.factorioupdater.models.*;
 import me.vilsol.factorioupdater.util.Utils;
@@ -37,9 +34,6 @@ public class ModManager {
 
     private static final ModManager instance = new ModManager();
 
-    @Getter
-    @Setter
-    private UserAgent agent = new UserAgent();
     private Map<String, Mod> modCache = new ConcurrentHashMap<>();
     private Map<String, FetchTreeResult> modTreeCache = new ConcurrentHashMap<>();
 
