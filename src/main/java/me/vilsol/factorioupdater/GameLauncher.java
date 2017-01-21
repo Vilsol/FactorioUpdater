@@ -81,8 +81,6 @@ public class GameLauncher {
         } else {
             throw new UnsupportedOperationException("Unknown operating system -- cannot launch");
         }
-        System.out.println(executable.toString());
-        System.out.println(executable.exists());
         launchArguments.add(0, appDir.toPath().relativize(executable.toPath()).toString());
         try {
             Runtime runtime = Runtime.getRuntime();
