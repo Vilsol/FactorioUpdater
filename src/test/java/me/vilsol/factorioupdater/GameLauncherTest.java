@@ -16,6 +16,7 @@
  */
 package me.vilsol.factorioupdater;
 
+import java.awt.GraphicsEnvironment;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -63,6 +64,14 @@ public class GameLauncherTest {
                     return FileVisitResult.CONTINUE;
                 }
             });
+            if (!GraphicsEnvironment.isHeadless()) {
+                try {
+                    Process proc = GameLauncher.launchFactorio(tempFile.toFile(), new String[0], null);
+                    proc.waitFor();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             deleteDirectory(tempFile.toFile());
         } catch (IOException e) {
             e.printStackTrace();

@@ -16,6 +16,7 @@
  */
 package me.vilsol.factorioupdater;
 
+import java.io.UncheckedIOException;
 import me.vilsol.factorioupdater.managers.APIManager;
 import me.vilsol.factorioupdater.models.DownloadTask;
 import me.vilsol.factorioupdater.ui.templates.DownloadProgressWindow;
@@ -56,10 +57,12 @@ public class GameLauncher {
 
      */
 
-    public static void launchFactorio(File appDir, String[] arguments, File modDirectory) {
+    public static Process launchFactorio(File appDir, String[] arguments, File modDirectory) {
         List<String> launchArguments = new LinkedList<>();
         launchArguments.addAll(Arrays.asList(arguments));
-        launchArguments.addAll(Arrays.asList("--mod-directory", modDirectory.getPath()));
+        if (modDirectory != null && !launchArguments.contains("--mod-directory")) {
+            launchArguments.addAll(Arrays.asList("--mod-directory", modDirectory.getPath()));
+        }
 
         String os = System.getProperty("os.name", "UNKNOWN").toUpperCase();
         File binDir = new File(appDir, "bin");
@@ -67,6 +70,7 @@ public class GameLauncher {
         if (os.contains("WIN")) {
             executable = new File(binDir, "factorio.exe");
         } else if (os.startsWith("MAC")) {
+            appDir = new File(appDir, "factorio.app");
             appDir = new File(appDir, "Contents");
             if (!binDir.exists()) {
                 binDir = new File(appDir, "MacOS");
@@ -75,16 +79,16 @@ public class GameLauncher {
         } else if (!os.equals("UNKNOWN")) {
             executable = new File(binDir, "factorio");
         } else {
-            System.err.println("Unknown operating system -- cannot launch");
-            return;
+            throw new UnsupportedOperationException("Unknown operating system -- cannot launch");
         }
+        System.out.println(executable.toString());
+        System.out.println(executable.exists());
         launchArguments.add(0, appDir.toPath().relativize(executable.toPath()).toString());
         try {
             Runtime runtime = Runtime.getRuntime();
-            Process process = runtime.exec(launchArguments.toArray(new String[0]), null, appDir);
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            return runtime.exec(launchArguments.toArray(new String[0]), null, appDir);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
