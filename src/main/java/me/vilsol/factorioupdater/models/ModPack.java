@@ -218,6 +218,7 @@ public class ModPack implements Mappable {
             System.out.println("Need to download " + toDownload.size() + " mods (" + (new DecimalFormat("#.##").format(fileSize / Resource.FILE_SIZE_TO_MEGABYTES)) + " MB)");
         } else {
             System.out.println("All set! No mods need to be downloaded!");
+            return;
         }
     
         ArrayList<DownloadTask> tasks = new ArrayList<>();
