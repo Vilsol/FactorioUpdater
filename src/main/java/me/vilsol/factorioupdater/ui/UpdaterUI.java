@@ -75,7 +75,10 @@ public class UpdaterUI extends Application {
         primaryStage.setWidth(575);
         primaryStage.setHeight(500);
         
-        primaryStage.setOnCloseRequest(e -> Platform.exit());
+        primaryStage.setOnCloseRequest(e -> {
+            Platform.exit();
+            System.exit(0);
+        });
         
         primaryStage.toFront();
     }
