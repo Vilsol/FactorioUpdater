@@ -28,8 +28,10 @@ public class Main {
             ProtocolManager.send(args[1]);
             return;
         }
-
-        new Thread(new ProtocolManager()).start();
+    
+        Thread protocolManagerThread = new Thread(new ProtocolManager());
+        protocolManagerThread.setDaemon(true);
+        protocolManagerThread.start();
 
         StreamHandler.init();
         ModpackManager.getInstance();

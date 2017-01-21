@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -99,43 +100,45 @@ public class ModpacksUI {
                 WatchKey current;
                 while (true) {
                     try {
-                        current = watchService.take();
-                        for (WatchEvent<?> watchEvent : current.pollEvents()) {
-                            WatchEvent.Kind<?> kind = watchEvent.kind();
-                            if (kind == StandardWatchEventKinds.OVERFLOW)
-                                continue;
-                            WatchEvent<Path> event = (WatchEvent<Path>) watchEvent;
-                            Path path = event.context();
-                            Path fullPath = packsPath.resolve(path);
-                            File file = fullPath.toFile();
-                            if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                                if (file.isDirectory() && fullPath.getParent().equals(packsPath)) {
-                                    ModPack pack = loadModPack(file);
-                                    if (pack == null) continue;
-                                    packsByDirectory.put(file, pack);
-                                }
-                            } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-                                if (file.isDirectory() && fullPath.getParent().equals(packsPath)) {
-                                    packsByDirectory.remove(file);
-                                }
-                            } else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-                                while (fullPath.getParent() != null && !fullPath.getParent().equals(packsPath)) {
-                                    fullPath = fullPath.getParent();
-                                }
-                                file = fullPath.toFile();
-                                if (file.isDirectory() && packsPath.equals(fullPath.getParent())) {
-                                    ModPack pack = loadModPack(file);
-                                    if (pack == null) continue;
-                                    packsByDirectory.put(file, pack);
+                        current = watchService.poll(1, TimeUnit.SECONDS);
+                        
+                        if(current != null){
+                            for (WatchEvent<?> watchEvent : current.pollEvents()) {
+                                WatchEvent.Kind<?> kind = watchEvent.kind();
+                                if (kind == StandardWatchEventKinds.OVERFLOW)
+                                    continue;
+                                WatchEvent<Path> event = (WatchEvent<Path>) watchEvent;
+                                Path path = event.context();
+                                Path fullPath = packsPath.resolve(path);
+                                File file = fullPath.toFile();
+                                if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
+                                    if (file.isDirectory() && fullPath.getParent().equals(packsPath)) {
+                                        ModPack pack = loadModPack(file);
+                                        if (pack == null) continue;
+                                        packsByDirectory.put(file, pack);
+                                    }
+                                } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+                                    if (file.isDirectory() && fullPath.getParent().equals(packsPath)) {
+                                        packsByDirectory.remove(file);
+                                    }
+                                } else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+                                    while (fullPath.getParent() != null && !fullPath.getParent().equals(packsPath)) {
+                                        fullPath = fullPath.getParent();
+                                    }
+                                    file = fullPath.toFile();
+                                    if (file.isDirectory() && packsPath.equals(fullPath.getParent())) {
+                                        ModPack pack = loadModPack(file);
+                                        if (pack == null) continue;
+                                        packsByDirectory.put(file, pack);
+                                    }
                                 }
                             }
+                            loadModPacks.run();
+                            boolean valid = current.reset();
+                            if (!valid) {
+                                break;
+                            }
                         }
-                        loadModPacks.run();
-                        boolean valid = current.reset();
-                        if (!valid) {
-                            break;
-                        }
-                        Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         break;
