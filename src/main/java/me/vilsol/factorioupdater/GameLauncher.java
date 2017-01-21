@@ -103,8 +103,7 @@ public class GameLauncher {
         String os = System.getProperty("os.name", "UNKNOWN").toUpperCase();
         String arch = System.getProperty("os.arch");
 
-        String urlRoot = "https://www.factorio.com/get-download/" + factorioVersion + "/alpha/";
-        String downloadUrl = urlRoot;
+        String downloadUrl = "https://www.factorio.com/get-download/" + factorioVersion + "/alpha/";
         String ext;
 
         if (os.contains("WIN")) {
@@ -137,7 +136,7 @@ public class GameLauncher {
                 HttpClient agent = APIManager.getInstance().getAgent();
                 HttpResponse response = agent.execute(new HttpGet(downloadUrl));
                 String location = response.getFirstHeader("Location").getValue();
-                Integer size = Integer.valueOf(agent.execute(new HttpHead(location)).getFirstHeader("Content-Length").getValue());
+                Long size = Long.valueOf(agent.execute(new HttpHead(location)).getFirstHeader("Content-Length").getValue());
                 System.out.println(size);
     
                 DownloadTask task = new DownloadTask("Factorio v" + factorioVersion, location, installFile, size, null);
@@ -156,12 +155,11 @@ public class GameLauncher {
                     progressWindow.setDownloadPool(downloadPool);
                 }catch(ExceptionInInitializerError ignored){
                 }
-                
+
                 downloadPool.run();
-    
-                return false;
+                return true;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
             }
         }
 

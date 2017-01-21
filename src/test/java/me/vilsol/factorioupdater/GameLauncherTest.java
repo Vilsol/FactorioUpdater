@@ -52,6 +52,12 @@ public class GameLauncherTest {
             System.out.println("Files:");
             Files.walkFileTree(tempFile, new SimpleFileVisitor<Path>() {
                 @Override
+                public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) {
+                    System.out.println(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     System.out.println(file);
                     return FileVisitResult.CONTINUE;

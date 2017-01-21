@@ -71,20 +71,19 @@ public class Extract {
         boolean extracted = false;
         try {
             Runtime runtime = Runtime.getRuntime();
-            runtime.exec(new String[]{ "hdiutil", "mount", file.toString() });
-            Process proc = runtime.exec(new String[]{ "hdiutil", "info" });
+            Process proc = runtime.exec(new String[]{ "hdiutil", "mount", file.toString() });
             BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             String line, prevLine = null;
             while ((line = reader.readLine()) != null) {
                 prevLine = line;
             }
             if (prevLine != null) {
-                String mountLocation = prevLine.split("\\t", 3)[2];
-                runtime.exec(new String[]{"cp", "-R", mountLocation + "/factorio.app", dir.toString() });
+                String mountLocation = prevLine.split("\\s+", 3)[2];
+                runtime.exec(new String[]{"cp", "-R", mountLocation + "/factorio.app", dir.toString() }).waitFor();
                 extracted = true;
-                runtime.exec(new String[]{"hdiutil", "unmount", mountLocation});
+                runtime.exec(new String[]{"hdiutil", "unmount", mountLocation}).waitFor();
             }
-        } catch (IOException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
         return extracted;
