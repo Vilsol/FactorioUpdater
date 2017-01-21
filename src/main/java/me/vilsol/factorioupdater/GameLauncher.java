@@ -57,7 +57,7 @@ public class GameLauncher {
 
      */
 
-    public static Process launchFactorio(File appDir, String[] arguments, File modDirectory) {
+    public static Process launchFactorioClient(File appDir, String[] arguments, File modDirectory) {
         List<String> launchArguments = new LinkedList<>();
         launchArguments.addAll(Arrays.asList(arguments));
         if (modDirectory != null && !launchArguments.contains("--mod-directory")) {

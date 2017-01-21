@@ -54,7 +54,7 @@ public class GameLauncherTest {
             Files.walkFileTree(tempFile, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) {
-                    System.out.println(file);
+                    System.out.println(file + File.separator);
                     return FileVisitResult.CONTINUE;
                 }
 
@@ -66,8 +66,8 @@ public class GameLauncherTest {
             });
             if (!GraphicsEnvironment.isHeadless()) {
                 try {
-                    Process proc = GameLauncher.launchFactorio(tempFile.toFile(), new String[0], null);
-                    proc.waitFor();
+                    Process proc = GameLauncher.launchFactorioClient(tempFile.toFile(), new String[0], null);
+                    System.out.println("Factorio exited with code: " + proc.waitFor());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
