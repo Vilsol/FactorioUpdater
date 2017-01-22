@@ -19,6 +19,10 @@ package me.vilsol.factorioupdater.util;
 import me.vilsol.factorioupdater.Resource;
 import me.vilsol.factorioupdater.models.ServerModRequirement;
 import me.vilsol.factorioupdater.models.Version;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.*;
 import java.net.*;
@@ -38,8 +42,13 @@ public class Utils {
     
     public static String fetchURL(String url) {
         try{
-            URL oracle = new URL(url);
-            BufferedReader in = new BufferedReader(new InputStreamReader(oracle.openStream()));
+            HttpClient client = HttpClientBuilder.create().build();
+            HttpGet request = new HttpGet(url);
+            request.addHeader("User-Agent", "FactorioUpdater");
+            request.addHeader("Accept", "*/*");
+            HttpResponse response = client.execute(request);
+            
+            BufferedReader in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
             String whole = "";
             String inputLine;

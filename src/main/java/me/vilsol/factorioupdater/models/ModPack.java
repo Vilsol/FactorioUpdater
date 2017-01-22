@@ -118,11 +118,16 @@ public class ModPack implements Mappable {
         dependencies = new Tree<>((Tree<ModWithRelease>) null);
         missing = new ArrayList<>();
     
+        System.out.println("Resolving modpack...");
+        long start = System.currentTimeMillis();
+    
         mods.forEach((name, mod) -> {
             ModManager.FetchTreeResult result = ModManager.getInstance().fetchTree(name, mod.getModRelease().getVersion(), "=");
             dependencies.addBranch(result.getResult());
             missing.addAll(result.getMissing());
         });
+    
+        System.out.println("Finished in " + (System.currentTimeMillis() - start) + "ms");
         
         return missing;
     }

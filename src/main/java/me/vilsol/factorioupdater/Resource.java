@@ -31,7 +31,7 @@ public class Resource {
     public static final String APP_NAME = "Factorio Updater";
 
     public static final String URL_FACTORIO_MODS = "https://mods.factorio.com";
-    public static final String URL_FACTORIO_MODS_MOD = "https://mods.factorio.com/api/mods/";
+    public static final String URL_FACTORIO_MODS_MOD = "https://updater.vil.so/api/factorio/mod/";
 
     public static final File APP_HOME_DIR;
     public static final String APP_HOME_NAME = "FactorioUpdater";
