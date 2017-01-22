@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -145,7 +146,7 @@ public class Utils {
                 s += String.format("] %.1f%% %s/%s", percent, toHumanReadable(a), toHumanReadable(b));
                 System.out.print(s);
                 System.out.flush();
-                if (a == b)
+                if (Objects.equals(a, b))
                     System.out.println();
             };
         }
